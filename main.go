@@ -3,15 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"github.com/streadway/amqp"
-	"log"
-	"mq/mq"
+	"mq/service"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 )
+
+const configPath = "/Users/Bear/gopath/src/mq/config"
+const queueNme = "test"
 
 type dotObject struct {
 	EventTime string `json:"event_time"`
@@ -19,46 +21,47 @@ type dotObject struct {
 	DotType string `json:"type"`
 }
 
-func main() {
-	ReferralChannel := make(chan dotObject, 10)
+var L = service.LogService{}
 
-	var stopLock sync.Mutex
-	stop := false
-	stopChan := make(chan struct{}, 1)
+func main() {
+	//初始化配置
+	service.Cf.LoadFile(configPath + "/config.json")
+
+	ReferralChannel := make(chan string, 1000)
+
+	//初始化mq
+	mq := service.GetMq()
+	mq.GetQueue(mq.Channel, queueNme)
+
+	//收到终止信号的处理
 	signalChan := make(chan os.Signal, 1)
 	go func() {
-		//阻塞程序运行，直到收到终止的信号
 		<-signalChan
-		stopLock.Lock()
-		stop = true
-		stopLock.Unlock()
-		log.Println("Close Mq...")
-		err := mq.CloseMq()
-		if err != nil {
-			fmt.Println("close mq error" + err.Error())
+		L.Debug("Closing Mq...", service.LEVEL_DEBUG)
+		if err := mq.CloseMq();err != nil {
+			L.Debug("close mq error", service.LEVEL_ERROR)
 		}
-		stopChan <- struct{}{}
 		os.Exit(0)
 	}()
 
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
+	//生产者发布
 	go func() {
 		for {
 			select {
 			case dot := <-ReferralChannel:
-				str,_ := json.Marshal(dot)
-				body := string(str)
-				err := mq.GetMq().Channel.Publish(
+				err := mq.Channel.Publish(
 					"",                    // exchange
-					mq.GetMq().Queue.Name, // routing key
+					queueNme, // routing key
 					false,                 // mandatory
 					false,                 // immediate
 					amqp.Publishing{
 						ContentType: "text/plain",
-						Body:        []byte(body),
+						Body:        []byte(dot),
 					})
-				log.Printf(" [x] Sent %s", body)
+
+				L.Debug(fmt.Sprintf("==>Sent %s:", dot), service.LEVEL_DEBUG)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -66,19 +69,42 @@ func main() {
 		}
 	}()
 
+	//生产者队列
+	for i := 0; i < 3; i++ {
+		go func() {
+			ch1 := dotObject{};
+			u := uuid.Must(uuid.NewV4())
+			ch1.ReferralId = u.String()
+			ch1.DotType = "4"
+			ch1.EventTime = time.Now().Format("2006/01/02 15:04:05")
+			data,_ := json.Marshal(ch1)
+			for {
+				ReferralChannel<-string(data)
+				time.Sleep(time.Second)
+			}
+		}()
+	}
+
+	//消费数据
 	go func() {
-		ch1 := dotObject{};
-		ch1.ReferralId = "706"
-		ch1.DotType = "4"
-		ch1.EventTime = "1544611770"
-		for {
-			ReferralChannel<-ch1
-			time.Sleep(time.Second * 1)
+		messages, _ := mq.Channel.Consume(
+			queueNme, // queue
+			"",     // consumer
+			true,   // auto-ack
+			false,  // exclusive
+			false,  // no-local
+			false,  // no-wait
+			nil,    // args
+		)
+
+		for d := range messages {
+			L.Debug(fmt.Sprintf("<==Received: %s", d.Body), service.LEVEL_DEBUG)
+			time.Sleep(time.Second)
 		}
 	}()
 
-	mq.Consume()
+	L.Debug(fmt.Sprint("...Waiting for messages. To exit press CTRL+C"), service.LEVEL_DEBUG)
 
-	select {
-	}
+	//阻塞主进程，避免退出
+	select {}
 }
