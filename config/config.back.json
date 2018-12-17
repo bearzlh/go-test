@@ -1,0 +1,10 @@
+{
+  "mq":{
+    "user" : "rabbitmquser",
+    "passwd" : "rabbitmqpass",
+    "host" : "localhost",
+    "port" : "5672",
+    "vhost" : "",
+    "exchange" : "cps.ex.topic"
+  }
+}

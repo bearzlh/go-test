@@ -69,21 +69,25 @@ func main() {
 		}
 	}()
 
+	isFull := make(chan bool, 1)
+
+	go func() {
+		time.Sleep(time.Second)
+		isFull<-true
+	}()
+
 	//生产者队列
-	for i := 0; i < 3; i++ {
-		go func() {
-			ch1 := dotObject{};
-			u := uuid.Must(uuid.NewV4())
-			ch1.ReferralId = u.String()
-			ch1.DotType = "4"
-			ch1.EventTime = time.Now().Format("2006/01/02 15:04:05")
-			data,_ := json.Marshal(ch1)
-			for {
-				ReferralChannel<-string(data)
-				time.Sleep(time.Second)
-			}
-		}()
-	}
+	go func() {
+		ch1 := dotObject{};
+		u := uuid.Must(uuid.NewV4())
+		ch1.ReferralId = u.String()
+		ch1.DotType = "4"
+		ch1.EventTime = time.Now().Format("2006/01/02 15:04:05")
+		data,_ := json.Marshal(ch1)
+		for ; len(isFull) == 0; {
+			ReferralChannel<-string(data)
+		}
+	}()
 
 	//消费数据
 	go func() {
@@ -99,7 +103,6 @@ func main() {
 
 		for d := range messages {
 			L.Debug(fmt.Sprintf("<==Received: %s", d.Body), service.LEVEL_DEBUG)
-			time.Sleep(time.Second)
 		}
 	}()
 

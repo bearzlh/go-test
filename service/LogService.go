@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 )
@@ -25,7 +24,7 @@ type LogService struct {
 func (L *LogService)FailOnError(err error, msg string) {
 	if err != nil {
 		L.Debug(msg, LEVEL_ERROR)
-		log.Fatalf("%s: %s\n", msg, err)
+		L.outPut(fmt.Sprintf("%s: %s\n", msg, err))
 	}
 }
 
@@ -42,7 +41,7 @@ func (L *LogService) Debug(msg string, level string) {
 	if fileInfo == nil || !fileInfo.IsDir() {
 		err := os.Mkdir(dir, 0755)
 		if err != nil {
-			log.Printf("%s\n", err)
+			L.outPut(fmt.Sprintf("%s\n", err))
 			return
 		}
 	}
@@ -50,13 +49,14 @@ func (L *LogService) Debug(msg string, level string) {
 	logFile := dir+"/"+fmt.Sprintf("%d_%d",now.Day(), now.Hour())+".log"
 	file, err := os.OpenFile(logFile, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if err != nil {
-		log.Printf("%s\n", err)
+		L.outPut(fmt.Sprintf("%s\n", err))
 		return
 	}
-
-	_, err1:= io.WriteString(file, L.getMsg(msg, level));
-	if err != nil {
-		log.Printf("%s\n", err1)
+	if Cf.Debug {
+		_, err1:= io.WriteString(file, L.getMsg(msg, level));
+		if err != nil {
+			L.outPut(fmt.Sprintf("%s\n", err1))
+		}
 	}
 }
 
@@ -64,6 +64,12 @@ func (L *LogService) Debug(msg string, level string) {
 func (L *LogService) getMsg(msg string, level string) string {
 	Nano := time.Now().Nanosecond() / 1000000
 	msg = fmt.Sprintf("level:[%s]\ttime:[%s.%d]\tpid:[%d]\tmsg:[%s]", level, time.Now().Format("2006-01-02 15:04:05"), Nano, os.Getpid(), msg)
-	fmt.Println(msg)
+	L.outPut(msg)
 	return msg + "\n"
+}
+
+func (L *LogService)outPut(msg string) {
+	if Cf.Debug {
+		fmt.Println(msg)
+	}
 }

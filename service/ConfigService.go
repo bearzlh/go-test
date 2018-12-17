@@ -3,11 +3,14 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gohouse/gorose"
 	"io/ioutil"
 )
 
 type ConfigService struct {
 	Mq mq
+	DB gorose.DbConfigSingle
+	Debug bool
 }
 
 type mq struct {

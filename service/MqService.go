@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/streadway/amqp"
 )
 
@@ -38,10 +39,10 @@ func GetMq() *MqService {
 //获取连接
 func getConnection(user string, passwd string, host string, port string, vhost string) *amqp.Connection {
 	hostPath := "amqp://"+user+":"+passwd+"@"+host+":"+port+"/"+vhost
-	L.Debug(hostPath, LEVEL_DEBUG)
+	L.Debug("connect==>" + hostPath, LEVEL_DEBUG)
 	conn, err := amqp.Dial(hostPath)
 	L.FailOnError(err, "Failed to connect to RabbitMQ")
-
+	L.Debug("connected!", LEVEL_DEBUG)
 	return conn
 }
 
@@ -86,4 +87,38 @@ func (M *MqService)CloseMq() error {
 	}
 
 	return nil
+}
+
+//生产
+func (M *MqService) Produce(body string, queueName string) {
+	err := M.Channel.Publish(
+		"",                    // exchange
+		queueName, // routing key
+		false,                 // mandatory
+		false,                 // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(body),
+		})
+	L.Debug(fmt.Sprintf("==>Sent %s:", body), LEVEL_DEBUG)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+//消费
+func (M *MqService) Consume(queueName string) {
+	messages, _ := M.Channel.Consume(
+		queueName, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+
+	for d := range messages {
+		L.Debug(fmt.Sprintf("<==Received: %s", d.Body), LEVEL_DEBUG)
+	}
 }

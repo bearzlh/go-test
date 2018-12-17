@@ -1,10 +1,19 @@
 {
+  "debug": false,
   "mq":{
     "user" : "rabbitmquser",
     "passwd" : "rabbitmqpass",
-    "host" : "localhost",
+    "host" : "192.168.0.154",
     "port" : "5672",
-    "vhost" : "",
+    "vhost" : "/my_vhost",
     "exchange" : "cps.ex.topic"
+  },
+  "db": {
+    "Driver": "mysql",
+    "EnableQueryLog": true,
+    "SetMaxOpenConns": 0,
+    "SetMaxIdleConns": 0,
+    "Prefix": "",
+    "Dsn": "test_cps_user:test_cps_userpass123456@tcp(192.168.0.104:3306)/test_cps?charset=utf8"
   }
 }
