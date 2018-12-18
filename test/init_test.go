@@ -11,7 +11,7 @@ import (
 const envFile = "../.env"
 
 func TestMain(m *testing.M) {
-	env := "local"
+	env := "dev"
 
 	file, _ := filepath.Abs(envFile)
 

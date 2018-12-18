@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofrs/uuid"
-	"github.com/streadway/amqp"
+	"io/ioutil"
 	"mq/service"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 )
 
-const configPath = "/Users/Bear/gopath/src/mq/config"
 const queueNme = "test"
+const envFile = "./.env"
 
 type dotObject struct {
 	EventTime string `json:"event_time"`
@@ -25,7 +26,20 @@ var L = service.LogService{}
 
 func main() {
 	//初始化配置
-	service.Cf.LoadFile(configPath + "/config.json")
+	env := "dev"
+
+	file, _ := filepath.Abs(envFile)
+
+	fileState, _ := os.Stat(envFile)
+
+	if !fileState.IsDir() {
+		content, _ := ioutil.ReadFile(envFile)
+		env = string(content)
+	}
+
+	dir := filepath.Dir(file)
+
+	service.GetConfig(env, dir)
 
 	ReferralChannel := make(chan string, 1000)
 
@@ -51,20 +65,7 @@ func main() {
 		for {
 			select {
 			case dot := <-ReferralChannel:
-				err := mq.Channel.Publish(
-					"",                    // exchange
-					queueNme, // routing key
-					false,                 // mandatory
-					false,                 // immediate
-					amqp.Publishing{
-						ContentType: "text/plain",
-						Body:        []byte(dot),
-					})
-
-				L.Debug(fmt.Sprintf("==>Sent %s:", dot), service.LEVEL_DEBUG)
-				if err != nil {
-					fmt.Println(err)
-				}
+				mq.Produce(dot, queueNme)
 			}
 		}
 	}()
@@ -91,19 +92,7 @@ func main() {
 
 	//消费数据
 	go func() {
-		messages, _ := mq.Channel.Consume(
-			queueNme, // queue
-			"",     // consumer
-			true,   // auto-ack
-			false,  // exclusive
-			false,  // no-local
-			false,  // no-wait
-			nil,    // args
-		)
-
-		for d := range messages {
-			L.Debug(fmt.Sprintf("<==Received: %s", d.Body), service.LEVEL_DEBUG)
-		}
+		mq.Consume(queueNme)
 	}()
 
 	L.Debug(fmt.Sprint("...Waiting for messages. To exit press CTRL+C"), service.LEVEL_DEBUG)

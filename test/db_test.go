@@ -14,6 +14,8 @@ func TestGetDsn(t *testing.T) {
 	user := model.User{}
 
 	session := service.GetUserDb(1)
-	session.Table(&user).First()
+	_, err := session.Table(&user).First()
+
+	L.FailOnError(err, "查询错误")
 	t.Log(user.OpenId)
 }
