@@ -14,7 +14,6 @@ import (
 
 var L = service.LogService{}
 
-const configPath = "/Users/Bear/gopath/src/mq/config"
 const queueUserSubscribe = "collect.user.subscribe"
 const queueReferralSubscribe = "collect.referral.subscribe"
 const queueReferralPv = "collect.referral.pv"
@@ -27,11 +26,6 @@ type dotObject struct {
 	Sex string `json:"sex"`
 	ReferralId int64 `json:"referral_id"`
 	Type int `json:"type"`
-}
-
-func TestMain(m *testing.M) {
-	service.Cf.LoadFile(configPath + "/config.json")
-	m.Run()
 }
 
 func TestConsume(t *testing.T) {
@@ -69,8 +63,6 @@ func TestUVWithChannel(t *testing.T) {
 		ReferralPvChannel[next] = make(chan string, channelLen)
 	}
 
-	var AH = helpter.ArrayHelper{}
-
 	//初始化mq
 	mq := service.GetMq()
 
@@ -104,8 +96,8 @@ func TestUVWithChannel(t *testing.T) {
 		next := i
 		go func() {
 			ch1 := dotObject{};
-			ch1.UserId = int64(AH.RandInt(10000, 20000))
-			rid := referralIds[AH.RandInt(0, len(referralIds))]
+			ch1.UserId = int64(helpter.HA.RandInt(10000, 20000))
+			rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
 			if rid.Valid {
 				ch1.ReferralId = rid.Int64
 			} else {
@@ -130,8 +122,6 @@ func TestUVWithChannel(t *testing.T) {
 func TestUVNoChannel(t *testing.T) {
 	channelCount := 5
 
-	var AH = helpter.ArrayHelper{}
-
 	//初始化mq
 	mq := service.GetMq()
 
@@ -150,8 +140,8 @@ func TestUVNoChannel(t *testing.T) {
 	for i := 0; i < channelCount; i++ {
 		go func() {
 			ch1 := dotObject{};
-			ch1.UserId = int64(AH.RandInt(10000, 20000))
-			rid := referralIds[AH.RandInt(0, len(referralIds))]
+			ch1.UserId = int64(helpter.HA.RandInt(10000, 20000))
+			rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
 			if rid.Valid {
 				ch1.ReferralId = rid.Int64
 			} else {
@@ -176,8 +166,6 @@ func TestSend(t *testing.T) {
 	var ReferralSubscribeChannel = make(chan string, 10000)
 	var UserSubscribe = make(chan string, 10000)
 	var ReferralPv = make(chan string, 10000)
-	var AH = helpter.ArrayHelper{}
-
 	//初始化mq
 	mq := service.GetMq()
 
@@ -213,7 +201,7 @@ func TestSend(t *testing.T) {
 	//for i := 0; i < 10; i++ {
 	go func() {
 		ch1 := dotObject{};
-		rid := referralIds[AH.RandInt(0, len(referralIds))]
+		rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
 		if rid.Valid {
 			ch1.ReferralId = rid.Int64
 		} else {
@@ -247,8 +235,8 @@ func TestSend(t *testing.T) {
 	//for i := 0;i < 10;i++  {
 	go func() {
 		ch1 := dotObject{};
-		ch1.UserId = int64(AH.RandInt(10000, 20000))
-		rid := referralIds[AH.RandInt(0, len(referralIds))]
+		ch1.UserId = int64(helpter.HA.RandInt(10000, 20000))
+		rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
 		if rid.Valid {
 			ch1.ReferralId = rid.Int64
 		} else {

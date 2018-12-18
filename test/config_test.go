@@ -6,6 +6,5 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	service.GetConfig().LoadFile("/Users/Bear/gopath/src/mq/config/config.json")
-	t.Log(service.GetConfig().DB.Driver)
+	t.Log(service.Cf.DB)
 }

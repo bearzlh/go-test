@@ -6,8 +6,5 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	L := service.LogService{}
-	for i := 0; i < 10; i++ {
-		L.Debug("aadd", "error")
-	}
+	service.L.Debug("aadd", "error")
 }

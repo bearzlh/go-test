@@ -11,8 +11,6 @@ type MqService struct {
 }
 
 var Mq *MqService
-var L = LogService{}
-
 //保证单例模式
 var ChBool = make(chan bool, 1)
 

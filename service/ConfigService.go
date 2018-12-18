@@ -3,22 +3,70 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gohouse/gorose"
 	"io/ioutil"
 )
 
+const ConfigName = "default"
+const Ext = ".json"
+const ConfigDir = "config"
+const Split = "/"
+
 type ConfigService struct {
-	Mq mq
-	DB gorose.DbConfigSingle
-	Debug bool
+	Env        string
+	ConfigPath string
+	Debug      bool
+	Mq         mq
+	DB         db
 }
 
-type mq struct {
-	User string `json:"user"`
-	Passwd string `json:"passwd"`
+//数据库全局配置
+type db struct{
+	Driver string `json:"driver"`
+	Prefix string `json:"prefix"`
+	Charset string `json:"charset"`
+	Mysql struct{
+		Default Mysql
+		User MysqlSpread
+	}
+}
+
+type MysqlSpread struct {
+	Prefix string `json:"prefix"`
+	Total int `json:"total"`
+	Connection []struct{
+		From int `json:"from"`
+		To int `json:"to"`
+		Read []hostPort
+		Write hostPort
+	}
+}
+
+//数据库基本配置
+type Mysql struct {
+	Name string `json:"name"`
+	Charset string `json:"charset"`
+	Collation string `json:"collation"`
+	Database string `json:"database"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Prefix  string `json:"prefix"`
+	Read []hostPort
+	Write hostPort
+}
+
+//IP端口
+type hostPort struct {
 	Host string `json:"host"`
 	Port string `json:"port"`
-	Vhost string `json:"vhost"`
+}
+
+//mq配置
+type mq struct {
+	User     string `json:"user"`
+	Passwd   string `json:"passwd"`
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	Vhost    string `json:"vhost"`
 	Exchange string `json:"exchange"`
 }
 
@@ -28,24 +76,35 @@ var Cf *ConfigService
 var ConfigBool = make(chan bool, 1)
 
 //初始化
-func GetConfig() *ConfigService {
-	ConfigBool<-true
+func GetConfig(env string, path string) *ConfigService {
+	ConfigBool <- true
 	if Cf == nil {
 		fmt.Println("----")
 		Cf = &ConfigService{}
+		Cf.Env = env
+		Cf.ConfigPath = path
+		Cf.Debug = true
+		Cf.loadFile()
 	}
 	<-ConfigBool
 	return Cf
 }
 
 //加载配置文件
-func (C *ConfigService)LoadFile(file string) *ConfigService {
+func (C *ConfigService) loadFile() *ConfigService {
+	defaultFile := Cf.ConfigPath + Split + ConfigDir + Split + ConfigName + Ext
+	envFile := Cf.ConfigPath + Split + ConfigDir + Split + Cf.Env + Ext
 	L := LogService{}
-	content, err :=ioutil.ReadFile(file)
-	L.FailOnError(err, "文件内容读取失败")
+	content, err := ioutil.ReadFile(defaultFile)
+	L.FailOnError(err, "默认文件内容读取失败")
 
 	err = json.Unmarshal(content, &Cf)
-	L.FailOnError(err, "内容解析错误")
+	L.FailOnError(err, "默认内容解析错误")
 
+	envContent, err := ioutil.ReadFile(envFile)
+	L.DebugOnError(err)
+
+	err = json.Unmarshal(envContent, &Cf)
+	L.DebugOnError(err)
 	return C
 }

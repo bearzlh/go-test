@@ -20,11 +20,21 @@ type LogService struct {
 
 }
 
+var L = LogService{}
+
 //错误处理
 func (L *LogService)FailOnError(err error, msg string) {
 	if err != nil {
 		L.Debug(msg, LEVEL_ERROR)
 		L.outPut(fmt.Sprintf("%s: %s\n", msg, err))
+		os.Exit(1)
+	}
+}
+
+func (L *LogService)DebugOnError(err error) {
+	if err != nil {
+		L.Debug(err.Error(), LEVEL_DEBUG)
+		L.outPut(fmt.Sprintf("%s\n", err))
 	}
 }
 

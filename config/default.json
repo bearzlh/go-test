@@ -1,0 +1,71 @@
+{
+  "debug": false,
+  "mq": {
+    "user": "rabbitmquser",
+    "passwd": "rabbitmqpass",
+    "host": "192.168.0.154",
+    "port": "5672",
+    "vhost": "/my_vhost",
+    "exchange": "cps.ex.topic"
+  },
+  "db": {
+    "driver": "mysql",
+    "prefix": "",
+    "charset": "utf8",
+    "mysql": {
+      "default": {
+        "name": "default",
+        "charset": "utf8",
+        "collation": "utf8_bin",
+        "database": "test_cps",
+        "username": "test_cps_user",
+        "password": "test_cps_userpass123456",
+        "prefix ": "",
+        "read": [
+          {
+            "host": "192.168.0.104",
+            "port": "3306"
+          }
+        ],
+        "write": {
+          "host": "192.168.0.104",
+          "port": "3306"
+        }
+      },
+      "user": {
+        "connection": [
+          {
+            "from": 0,
+            "read": [
+              {
+                "host": "192.168.0.106",
+                "port": "3306"
+              }
+            ],
+            "write": {
+              "host": "192.168.0.107",
+              "port": "3306"
+            },
+            "to": 255
+          },
+          {
+            "from": 256,
+            "read": [
+              {
+                "host": "192.168.0.106",
+                "port": "3307"
+              }
+            ],
+            "write": {
+              "host": "192.168.0.107",
+              "port": "3307"
+            },
+            "to": 511
+          }
+        ],
+        "prefix": "test_cps_user_",
+        "total": 512
+      }
+    }
+  }
+}
