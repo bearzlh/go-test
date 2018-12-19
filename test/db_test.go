@@ -11,6 +11,7 @@ func TestJson(t *testing.T) {
 }
 
 func TestGetDsn(t *testing.T) {
+	L := service.LogService{}
 	user := model.User{}
 
 	session := service.GetUserDb(1)

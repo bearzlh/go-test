@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofrs/uuid"
-	"io/ioutil"
 	"mq/service"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 )
@@ -26,25 +24,15 @@ var L = service.LogService{}
 
 func main() {
 	//初始化配置
-	env := "dev"
-
-	file, _ := filepath.Abs(envFile)
-
-	fileState, _ := os.Stat(envFile)
-
-	if !fileState.IsDir() {
-		content, _ := ioutil.ReadFile(envFile)
-		env = string(content)
-	}
-
-	dir := filepath.Dir(file)
-
-	service.GetConfig(env, dir)
+	service.GetConfig(envFile)
 
 	ReferralChannel := make(chan string, 1000)
 
+	L := service.GetLog(service.Cf.LogDir)
 	//初始化mq
-	mq := service.GetMq()
+	service.GetMq()
+
+	mq := service.Mq
 	mq.GetQueue(mq.Channel, queueNme)
 
 	//收到终止信号的处理

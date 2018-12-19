@@ -1,5 +1,6 @@
 {
   "debug": false,
+  "logdir": "../log",
   "mq": {
     "user": "rabbitmquser",
     "passwd": "rabbitmqpass",

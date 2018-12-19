@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 const ConfigName = "default"
@@ -17,6 +19,7 @@ type ConfigService struct {
 	Debug      bool
 	Mq         mq
 	DB         db
+	LogDir 	   string
 }
 
 //数据库全局配置
@@ -75,19 +78,38 @@ var Cf *ConfigService
 //保证单例模式
 var ConfigBool = make(chan bool, 1)
 
-//初始化
-func GetConfig(env string, path string) *ConfigService {
+//初始化配置，加载config配置文件
+func GetConfig(env string) *ConfigService {
 	ConfigBool <- true
 	if Cf == nil {
-		fmt.Println("----")
 		Cf = &ConfigService{}
-		Cf.Env = env
-		Cf.ConfigPath = path
+		Cf.Env, Cf.ConfigPath = checkEnv(env)
 		Cf.Debug = true
 		Cf.loadFile()
 	}
 	<-ConfigBool
 	return Cf
+}
+
+func checkEnv(envFile string) (string, string) {
+	env := "default"
+
+	file, _ := filepath.Abs(envFile)
+
+	fileState, err := os.Stat(envFile)
+
+	if err != nil {
+		fmt.Println("配置文件错误")
+		os.Exit(1)
+	} else {
+		if !fileState.IsDir() {
+			content, _ := ioutil.ReadFile(envFile)
+			env = string(content)
+		}
+	}
+
+	dir := filepath.Dir(file)
+	return env, dir
 }
 
 //加载配置文件
