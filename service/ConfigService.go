@@ -19,7 +19,20 @@ type ConfigService struct {
 	Debug      bool
 	Mq         mq
 	DB         db
+	Cache	   Cache
 	LogDir 	   string
+}
+
+type Cache struct{
+	Driver string `json:"driver"`
+	Connection []RedisConnection
+}
+
+type RedisConnection struct{
+	Name string `json:"name"`
+	Host string `json:"host"`
+	Port string `json:"port"`
+	Pass string `json:"pass"`
 }
 
 //数据库全局配置
