@@ -3,7 +3,7 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"mq/helpter"
+	"mq/helper"
 	"mq/model"
 	"mq/service"
 	"os"
@@ -96,8 +96,8 @@ func TestUVWithChannel(t *testing.T) {
 		next := i
 		go func() {
 			ch1 := dotObject{};
-			ch1.UserId = int64(helpter.HA.RandInt(10000, 20000))
-			rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
+			ch1.UserId = int64(helper.HA.RandInt(10000, 20000))
+			rid := referralIds[helper.HA.RandInt(0, len(referralIds))]
 			if rid.Valid {
 				ch1.ReferralId = rid.Int64
 			} else {
@@ -140,8 +140,8 @@ func TestUVNoChannel(t *testing.T) {
 	for i := 0; i < channelCount; i++ {
 		go func() {
 			ch1 := dotObject{};
-			ch1.UserId = int64(helpter.HA.RandInt(10000, 20000))
-			rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
+			ch1.UserId = int64(helper.HA.RandInt(10000, 20000))
+			rid := referralIds[helper.HA.RandInt(0, len(referralIds))]
 			if rid.Valid {
 				ch1.ReferralId = rid.Int64
 			} else {
@@ -201,7 +201,7 @@ func TestSend(t *testing.T) {
 	//for i := 0; i < 10; i++ {
 	go func() {
 		ch1 := dotObject{};
-		rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
+		rid := referralIds[helper.HA.RandInt(0, len(referralIds))]
 		if rid.Valid {
 			ch1.ReferralId = rid.Int64
 		} else {
@@ -235,8 +235,8 @@ func TestSend(t *testing.T) {
 	//for i := 0;i < 10;i++  {
 	go func() {
 		ch1 := dotObject{};
-		ch1.UserId = int64(helpter.HA.RandInt(10000, 20000))
-		rid := referralIds[helpter.HA.RandInt(0, len(referralIds))]
+		ch1.UserId = int64(helper.HA.RandInt(10000, 20000))
+		rid := referralIds[helper.HA.RandInt(0, len(referralIds))]
 		if rid.Valid {
 			ch1.ReferralId = rid.Int64
 		} else {

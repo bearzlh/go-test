@@ -19,3 +19,7 @@ func TestGetSet(t *testing.T) {
 		t.Log("GET C error")
 	}
 }
+
+func TestString(t *testing.T) {
+	t.Log(rune('a'))
+}

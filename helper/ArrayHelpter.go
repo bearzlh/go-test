@@ -1,4 +1,4 @@
-package helpter
+package helper
 
 import (
 	"math/rand"
